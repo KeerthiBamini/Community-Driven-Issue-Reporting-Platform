@@ -1,0 +1,121 @@
+.issue-card {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+  transition: 0.3s ease;
+}
+
+.issue-card:hover {
+  transform: translateY(-3px);
+}
+
+.issue-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.issue-card-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+/* Status Colors */
+.status-reported {
+  background-color: #f59e0b;
+}
+
+.status-assigned {
+  background-color: #3b82f6;
+}
+
+.status-progress {
+  background-color: #8b5cf6;
+}
+
+.status-resolved {
+  background-color: #10b981;
+}
+
+.issue-description {
+  margin: 15px 0;
+  color: #555;
+}
+
+.issue-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+}
+
+.category-tag {
+  background: #e5e7eb;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: capitalize;
+}
+
+.priority-score {
+  font-weight: 600;
+  color: #ef4444;
+}
+
+.issue-date {
+  font-size: 12px;
+  color: #777;
+  margin-top: 8px;
+}
+
+.issue-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+}
+
+.vote-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.vote-btn {
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  background: transparent;
+}
+
+.upvote:hover {
+  color: green;
+}
+
+.downvote:hover {
+  color: red;
+}
+
+.vote-count {
+  font-weight: 600;
+}
+
+.view-btn {
+  text-decoration: none;
+  background: #2563eb;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.view-btn:hover {
+  background: #1d4ed8;
+}

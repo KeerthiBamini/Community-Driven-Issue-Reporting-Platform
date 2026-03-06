@@ -1,0 +1,82 @@
+/* =============================== */
+/*         ROOT VARIABLES          */
+/* =============================== */
+
+:root {
+
+  /* ================= COLORS ================= */
+
+  /* Primary Brand Colors */
+  --color-primary: #2563eb;
+  --color-primary-dark: #1e40af;
+  --color-primary-light: #3b82f6;
+
+  /* Secondary */
+  --color-secondary: #6366f1;
+
+  /* Success */
+  --color-success: #16a34a;
+  --color-success-light: #22c55e;
+
+  /* Warning */
+  --color-warning: #f59e0b;
+
+  /* Danger */
+  --color-danger: #dc2626;
+
+  /* Neutral Colors */
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* ================= BACKGROUND ================= */
+
+  --bg-body: #f4f6f9;
+  --bg-card: #ffffff;
+  --bg-sidebar: #1f2937;
+
+  /* ================= TEXT ================= */
+
+  --text-primary: #111827;
+  --text-secondary: #6b7280;
+  --text-light: #ffffff;
+
+  /* ================= BORDER ================= */
+
+  --border-light: #e5e7eb;
+  --border-dark: #374151;
+
+  /* ================= SHADOW ================= */
+
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* ================= RADIUS ================= */
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* ================= SPACING ================= */
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+
+  /* ================= TRANSITION ================= */
+
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+}

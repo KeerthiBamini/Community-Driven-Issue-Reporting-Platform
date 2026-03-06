@@ -1,0 +1,99 @@
+/* ================================= */
+/*         LIGHT THEME (DEFAULT)     */
+/* ================================= */
+
+body {
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  transition: background-color var(--transition-normal),
+              color var(--transition-normal);
+}
+
+/* Cards */
+.card-custom {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-normal);
+}
+
+/* Sidebar */
+.sidebar {
+  background-color: var(--bg-sidebar);
+  color: var(--text-light);
+  transition: background-color var(--transition-normal);
+}
+
+.sidebar a {
+  color: var(--text-light);
+}
+
+.sidebar a:hover {
+  background-color: var(--color-primary);
+}
+
+/* Buttons */
+.btn-primary-custom {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.btn-primary-custom:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* ================================= */
+/*         DARK THEME OVERRIDES      */
+/* ================================= */
+
+/* When body has class="dark" */
+body.dark {
+
+  --bg-body: #111827;
+  --bg-card: #1f2937;
+  --bg-sidebar: #0f172a;
+
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
+
+  --border-light: #374151;
+}
+
+/* Dark Card */
+body.dark .card-custom {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: none;
+  border: 1px solid var(--border-light);
+}
+
+/* Dark Inputs */
+body.dark input,
+body.dark textarea,
+body.dark select {
+  background-color: #1f2937;
+  color: #f3f4f6;
+  border: 1px solid var(--border-light);
+}
+
+/* Dark Sidebar */
+body.dark .sidebar {
+  background-color: var(--bg-sidebar);
+}
+
+body.dark .sidebar a:hover {
+  background-color: var(--color-primary-light);
+}
+
+/* Dark Tables */
+body.dark table {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+}
+
+/* Smooth Transition */
+* {
+  transition: background-color var(--transition-normal),
+              color var(--transition-normal),
+              border var(--transition-normal);
+}
