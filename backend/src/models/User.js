@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
+const generateToken = require("../utils/generateToken");
 
 const userSchema = new mongoose.Schema(
   {
@@ -79,15 +79,11 @@ const userSchema = new mongoose.Schema(
 // HASH PASSWORD BEFORE SAVE
 // ==============================
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
+userSchema.pre("save", async function() {
+  if (!this.isModified("password")) return;
 
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
-
-  next();
 });
 
 
@@ -105,16 +101,7 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
 // ==============================
 
 userSchema.methods.generateAuthToken = function () {
-  return jwt.sign(
-    {
-      id: this._id,
-      role: this.role
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "7d"
-    }
-  );
+  return generateToken(this._id, this.role);
 };
 
 
@@ -122,7 +109,6 @@ userSchema.methods.generateAuthToken = function () {
 // INDEXING (Performance Optimization)
 // ==============================
 
-userSchema.index({ email: 1 });
 userSchema.index({ role: 1 });
 
 

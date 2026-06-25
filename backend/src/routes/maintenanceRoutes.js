@@ -1,47 +1,19 @@
-// maintenance.js - middleware to enable maintenance mode
-const maintenanceMode = (req, res, next) => {
-    // You can toggle maintenance mode here
-    const isMaintenance = true; // set to false to disable maintenance
+const express = require("express");
+const router = express.Router();
 
-    if (isMaintenance) {
-        // Send a friendly maintenance page or JSON
-        res.status(503).send(`
-            <html>
-                <head>
-                    <title>Maintenance</title>
-                    <style>
-                        body {
-                            font-family: Arial, sans-serif;
-                            background-color: #f2f2f2;
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            height: 100vh;
-                            margin: 0;
-                        }
-                        .container {
-                            text-align: center;
-                        }
-                        h1 {
-                            color: #ff4c4c;
-                        }
-                        p {
-                            color: #333;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <h1>🚧 We'll be back soon!</h1>
-                        <p>Our site is currently under maintenance. Please check back later.</p>
-                    </div>
-                </body>
-            </html>
-        `);
-    } else {
-        // If not in maintenance, continue to next middleware/route
-        next();
-    }
-};
+const {
+  getAssignedIssues,
+  updateIssueStatus
+} = require("../controllers/maintanceController");
 
-module.exports = maintenanceMode;
+const { protect } = require("../middlewares/authMiddleware");
+const { authorizeRoles } = require("../middlewares/roleMiddleware");
+
+// All maintenance routes require authentication and maintenance role
+router.use(protect);
+router.use(authorizeRoles("maintenance"));
+
+router.get("/issues", getAssignedIssues);
+router.patch("/issues/:issueId/status", updateIssueStatus);
+
+module.exports = router;

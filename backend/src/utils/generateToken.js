@@ -1,6 +1,10 @@
 
 const jwt = require("jsonwebtoken");
 
+const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+const JWT_ISSUER = process.env.JWT_ISSUER || "community-issues-api";
+
 /**
  * Generate Access Token
  * @param {String} userId
@@ -8,14 +12,19 @@ const jwt = require("jsonwebtoken");
  * @returns {String} token
  */
 const generateAccessToken = (userId, role) => {
+  if (!JWT_SECRET) {
+    throw new Error("JWT_SECRET is not configured");
+  }
+
   return jwt.sign(
     {
       id: userId,
-      role: role,
+      role,
     },
-    process.env.JWT_SECRET,
+    JWT_SECRET,
     {
-      expiresIn: "7d", // token expires in 7 days
+      expiresIn: JWT_EXPIRES_IN,
+      issuer: JWT_ISSUER,
     }
   );
 };

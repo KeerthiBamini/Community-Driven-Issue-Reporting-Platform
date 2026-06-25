@@ -10,9 +10,6 @@ import "./styles/variables.css";
 import "./styles/global.css";
 import "./styles/theme.css";
 
-/* Bootstrap (Optional if using Bootstrap) */
-import "bootstrap/dist/css/bootstrap.min.css";
-
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>

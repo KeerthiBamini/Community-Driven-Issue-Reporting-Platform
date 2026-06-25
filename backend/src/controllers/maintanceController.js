@@ -7,14 +7,22 @@ const Issue = require("../models/Issue");
 
 exports.getAssignedIssues = async (req, res) => {
   try {
-    const maintenanceId = req.user.id;
+    const maintenanceId = req.user?._id || req.user?.id;
+    if (!maintenanceId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized user context",
+        code: "UNAUTHORIZED"
+      });
+    }
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
     const query = {
       assignedTo: maintenanceId,
-      isDeleted: false
+      isDeleted: false,
+      status: { $nin: ["resolved", "closed"] }
     };
 
     const total = await Issue.countDocuments(query);
@@ -53,7 +61,14 @@ exports.updateIssueStatus = async (req, res) => {
   try {
     const { issueId } = req.params;
     const { status } = req.body;
-    const maintenanceId = req.user.id;
+    const maintenanceId = req.user?._id || req.user?.id;
+    if (!maintenanceId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized user context",
+        code: "UNAUTHORIZED"
+      });
+    }
 
     const allowedTransitions = ["in_progress", "resolved", "closed"];
 
@@ -102,6 +117,18 @@ exports.updateIssueStatus = async (req, res) => {
     }
 
     issue.status = status;
+    if (status === "resolved") {
+      issue.resolvedBy = maintenanceId;
+      issue.resolvedByModel = "MaintenanceStaff";
+      issue.resolvedAt = new Date();
+    }
+
+    if (status !== "resolved") {
+      issue.resolvedBy = null;
+      issue.resolvedByModel = null;
+      issue.resolvedAt = null;
+    }
+
     await issue.save();
 
     res.status(200).json({

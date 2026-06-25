@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "../api/axios";
 import "./Register.css";
 
-const Register = () => {
+const MaintenanceRegister = () => {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -56,20 +56,20 @@ const Register = () => {
     try {
       setLoading(true);
 
-      const res = await axios.post("/auth/register", {
+      const registerData = {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-      });
+        role: "maintenance",
+      };
 
-      // Expected backend response:
-      // { success: true, message: "User registered successfully" }
+      const res = await axios.post("/auth/register", registerData);
 
       setSuccess(res.data.message || "Registration successful!");
 
       // Redirect after 2 seconds
       setTimeout(() => {
-        navigate("/login");
+        navigate("/maintenance/login");
       }, 2000);
 
     } catch (err) {
@@ -84,7 +84,7 @@ const Register = () => {
   return (
     <div className="register-container">
       <div className="register-card">
-        <h2>Create Account</h2>
+        <h2>Register as Maintenance Staff</h2>
 
         {error && <div className="error-message">{error}</div>}
         {success && <div className="success-message">{success}</div>}
@@ -141,11 +141,14 @@ const Register = () => {
 
         <p className="login-link">
           Already have an account?{" "}
-          <Link to="/login">Login here</Link>
+          <Link to="/maintenance/login">Login here</Link>
+        </p>
+        <p className="home-link">
+          <Link to="/">Back to Home</Link>
         </p>
       </div>
     </div>
   );
 };
 
-export default Register;
+export default MaintenanceRegister;

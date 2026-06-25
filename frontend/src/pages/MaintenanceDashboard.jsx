@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "../api/axios";
 import Pagination from "../components/Pagination";
 import "./MaintenanceDashboard.css";
@@ -6,9 +6,22 @@ import "./MaintenanceDashboard.css";
 const MaintenanceDashboard = () => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const isFirstLoadRef = useRef(true);
+  const knownIssueIdsRef = useRef(new Set());
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
+  const pushNotification = (message, type = "info") => {
+    const item = {
+      id: Date.now().toString() + Math.random().toString(16).slice(2),
+      message,
+      type,
+      time: new Date().toLocaleTimeString(),
+    };
+    setNotifications((prev) => [item, ...prev].slice(0, 5));
+  };
 
   // Fetch assigned issues
   const fetchAssignedIssues = async (page = 1) => {
@@ -16,12 +29,38 @@ const MaintenanceDashboard = () => {
       setLoading(true);
 
       const res = await axios.get(
-        `/issues?assigned=true&page=${page}`
+        `/maintenance/issues?page=${page}`
       );
 
-      setIssues(res.data.data.issues);
-      setCurrentPage(res.data.data.currentPage);
-      setTotalPages(res.data.data.totalPages);
+      const list = res.data.data || [];
+      setIssues(list);
+      setCurrentPage(res.data.currentPage || 1);
+      setTotalPages(res.data.totalPages || 1);
+
+      // Notify only for newly assigned issues for this specific staff.
+      const nextIds = new Set(list.map((issue) => issue._id));
+      if (isFirstLoadRef.current) {
+        knownIssueIdsRef.current = nextIds;
+        isFirstLoadRef.current = false;
+      } else {
+        const newlyAssigned = list.filter((issue) => !knownIssueIdsRef.current.has(issue._id));
+        if (newlyAssigned.length > 0) {
+          const titles = newlyAssigned.map((issue) => issue.title).slice(0, 2).join(", ");
+          pushNotification(
+            newlyAssigned.length === 1
+              ? `New issue assigned to you: ${titles}`
+              : `${newlyAssigned.length} new issues assigned to you: ${titles}${
+                  newlyAssigned.length > 2 ? "..." : ""
+                }`,
+            "info"
+          );
+        }
+        knownIssueIdsRef.current = nextIds;
+      }
+
+      if (list.length === 0 && !isFirstLoadRef.current) {
+        pushNotification("No active assigned issues right now.", "success");
+      }
 
       setLoading(false);
     } catch (error) {
@@ -34,12 +73,24 @@ const MaintenanceDashboard = () => {
     fetchAssignedIssues(currentPage);
   }, [currentPage]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchAssignedIssues(currentPage);
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [currentPage]);
+
   // Update status function
   const updateStatus = async (issueId, status) => {
     try {
-      await axios.put(`/admin/issues/${issueId}/status`, {
+      await axios.patch(`/maintenance/issues/${issueId}/status`, {
         status,
       });
+
+      if (status === "resolved") {
+        const issue = issues.find((item) => item._id === issueId);
+        pushNotification(`Marked as resolved: ${issue?.title || "Issue"}`, "success");
+      }
 
       fetchAssignedIssues(currentPage);
     } catch (error) {
@@ -50,6 +101,20 @@ const MaintenanceDashboard = () => {
   return (
     <div className="maintenance-dashboard">
       <h2>Maintenance Dashboard</h2>
+      {notifications.length > 0 && (
+        <div className="dashboard-notification-panel">
+          <div className="dashboard-notification-head">Your Task Alerts</div>
+          {notifications.map((item) => (
+            <div key={item.id} className={`dashboard-notification-item ${item.type}`}>
+              <span className="notify-dot" />
+              <div className="notify-content">
+                <p>{item.message}</p>
+                <small>{item.time}</small>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {loading ? (
         <p>Loading assigned tasks...</p>
@@ -76,7 +141,7 @@ const MaintenanceDashboard = () => {
             </div>
 
             <div className="maintenance-actions">
-              {issue.status === "assigned" && (
+              {issue.status === "open" && (
                 <button
                   onClick={() =>
                     updateStatus(issue._id, "in_progress")

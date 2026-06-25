@@ -9,7 +9,7 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate("/user/login");
   };
 
   return (
@@ -23,19 +23,19 @@ const Navbar = () => {
         {!user && (
           <>
             <li>
-              <Link to="/login">Login</Link>
+              <Link to="/user/login">Login</Link>
             </li>
             <li>
-              <Link to="/register">Register</Link>
+              <Link to="/user/register">Register</Link>
             </li>
           </>
         )}
 
-        {/* MEMBER DASHBOARD */}
-        {user?.role === "member" && (
+        {/* USER DASHBOARD */}
+        {user?.role === "user" && (
           <>
             <li>
-              <Link to="/member/dashboard">Dashboard</Link>
+              <Link to="/user/dashboard">Dashboard</Link>
             </li>
             <li>
               <Link to="/report-issue">Report Issue</Link>
@@ -49,14 +49,11 @@ const Navbar = () => {
             <li>
               <Link to="/admin/dashboard">Admin Dashboard</Link>
             </li>
-            <li>
-              <Link to="/admin/issues">Manage Issues</Link>
-            </li>
           </>
         )}
 
         {/* MAINTENANCE STAFF DASHBOARD */}
-        {user?.role === "staff" && (
+        {user?.role === "maintenance" && (
           <>
             <li>
               <Link to="/maintenance/dashboard">My Tasks</Link>

@@ -1,50 +1,76 @@
 const User = require("../models/User");
+const Admin = require("../models/Admin");
+const MaintenanceStaff = require("../models/MaintenanceStaff");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-
-// =====================================================
-// 🔐 Helper: Generate JWT Token
-// =====================================================
-const generateToken = (user) => {
-  return jwt.sign(
-    {
-      id: user._id,
-      role: user.role
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: "7d" }
-  );
-};
+const generateToken = require("../utils/generateToken");
 
 // =====================================================
 // 📌 1. REGISTER USER
 // =====================================================
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, apartmentBlock, flatNumber } = req.body;
+    const { name, email, password, apartmentBlock, flatNumber, role } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
+    console.log("Registration request received:", { name, email, role });
 
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        message: "User already exists",
-        code: "USER_ALREADY_EXISTS"
+    // Validate role
+    const validRoles = ["user", "admin", "maintenance"];
+    const userRole = validRoles.includes(role) ? role : "user";
+
+    console.log("Validated role:", userRole);
+
+    // Use separate collections for admin/staff; user collection for residents.
+    let existingUser;
+    let user;
+
+    if (userRole === "admin") {
+      existingUser = await Admin.findOne({ email });
+      if (existingUser) {
+        console.log("Existing admin detected:", existingUser.email);
+        return res.status(400).json({
+          success: false,
+          message: "Admin already exists",
+          code: "USER_ALREADY_EXISTS"
+        });
+      }
+      console.log("Creating new admin...");
+      user = await Admin.create({ name, email, password, role: "admin" });
+    } else if (userRole === "maintenance") {
+      existingUser = await MaintenanceStaff.findOne({ email });
+      if (existingUser) {
+        console.log("Existing maintenance staff detected:", existingUser.email);
+        return res.status(400).json({
+          success: false,
+          message: "Maintenance staff already exists",
+          code: "USER_ALREADY_EXISTS"
+        });
+      }
+      console.log("Creating new maintenance staff...");
+      user = await MaintenanceStaff.create({ name, email, password, role: "maintenance" });
+    } else {
+      existingUser = await User.findOne({ email });
+      if (existingUser) {
+        console.log("Existing user detected:", existingUser.email);
+        return res.status(400).json({
+          success: false,
+          message: "User already exists",
+          code: "USER_ALREADY_EXISTS"
+        });
+      }
+      console.log("Creating new user...");
+      user = await User.create({
+        name,
+        email,
+        password,
+        role: "user",
+        apartmentBlock,
+        flatNumber
       });
     }
 
-    // Create user (role always "user")
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role: "user",
-      apartmentBlock,
-      flatNumber
-    });
+    console.log(`${userRole} created successfully:`, user._id);
 
-    const token = generateToken(user);
+    const token = generateToken(user._id, user.role);
 
     res.status(201).json({
       success: true,
@@ -59,12 +85,15 @@ exports.register = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Registration error:", error);
+    console.error("Error details:", error.message);
+    console.error("Error stack:", error.stack);
 
     res.status(500).json({
       success: false,
       message: "Registration failed",
-      code: "REGISTER_ERROR"
+      code: "REGISTER_ERROR",
+      details: error.message
     });
   }
 };
@@ -74,9 +103,17 @@ exports.register = async (req, res) => {
 // =====================================================
 exports.login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
 
-    const user = await User.findOne({ email }).select("+password");
+    let user;
+
+    if (role === "admin") {
+      user = await Admin.findOne({ email }).select("+password");
+    } else if (role === "maintenance") {
+      user = await MaintenanceStaff.findOne({ email }).select("+password");
+    } else {
+      user = await User.findOne({ email }).select("+password");
+    }
 
     if (!user) {
       return res.status(401).json({
@@ -88,7 +125,7 @@ exports.login = async (req, res) => {
 
     const isMatch = await bcrypt.compare(password, user.password);
 
-    if (!isMatch) {
+    if (!isMatch || (role && user.role !== role)) {
       return res.status(401).json({
         success: false,
         message: "Invalid credentials",
@@ -96,10 +133,13 @@ exports.login = async (req, res) => {
       });
     }
 
-    user.lastLogin = new Date();
-    await user.save();
+    // Update lastLogin for User model only
+    if (user.role === "user") {
+      user.lastLogin = new Date();
+      await user.save();
+    }
 
-    const token = generateToken(user);
+    const token = generateToken(user._id, user.role);
 
     res.status(200).json({
       success: true,
@@ -129,7 +169,7 @@ exports.login = async (req, res) => {
 // =====================================================
 exports.getProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password");
+    const user = req.user;
 
     if (!user) {
       return res.status(404).json({
@@ -176,3 +216,5 @@ exports.logout = async (req, res) => {
     });
   }
 };
+
+

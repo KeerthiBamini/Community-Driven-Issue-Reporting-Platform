@@ -1,13 +1,7 @@
-// =====================================================
-// 🔒 ROLE-BASED AUTHORIZATION MIDDLEWARE
-// Checks if logged-in user has required role(s)
-// Usage:
-// authorizeRoles("admin")
-// authorizeRoles("admin", "user")
-// =====================================================
 
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
+    console.log("🔒 AuthorizeRoles middleware called for:", req.path, "User role:", req.user?.role, "Required roles:", roles);
     try {
       // Make sure user exists (protect middleware should run first)
       if (!req.user) {

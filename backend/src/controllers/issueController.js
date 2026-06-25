@@ -13,6 +13,25 @@ const handleError = (res, error, codeKey, defaultMsg) => {
     });
 };
 
+const parseLocationInput = (location) => {
+  if (!location) return undefined;
+
+  if (typeof location === "string") {
+    try {
+      return JSON.parse(location);
+    } catch (error) {
+      return { block: location };
+    }
+  }
+
+  return location;
+};
+
+const canManageIssue = (issue, user) => {
+  if (!user) return false;
+  return issue.createdBy.toString() === user.id || user.role === "admin";
+};
+
 // =====================================================
 // 📌 1. CREATE ISSUE
 // =====================================================
@@ -21,12 +40,18 @@ exports.createIssue = async (req, res) => {
   try {
     const { title, description, category, severity, location } = req.body;
 
+    const parsedLocation = parseLocationInput(location);
+
+    // Handle images
+    const images = req.files ? req.files.map(file => `/uploads/${file.filename}`) : [];
+
     const issue = await Issue.create({
       title,
       description,
       category,
       severity,
-      location,
+      location: parsedLocation,
+      images,
       createdBy: req.user.id
     });
 
@@ -43,7 +68,6 @@ exports.createIssue = async (req, res) => {
 
 
 
-// =====================================================
 // 📌 2. GET ALL ISSUES (Public / User View)
 // =====================================================
 
@@ -52,9 +76,24 @@ exports.getAllIssues = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
 
-    const total = await Issue.countDocuments({ isDeleted: false });
+    let query = { isDeleted: false };
 
-    const issues = await Issue.find({ isDeleted: false })
+    // By default, user dashboard should show only active reported issues.
+    query.status = { $nin: ["resolved", "closed"] };
+
+    // Filters
+    const { status, category } = req.query;
+    if (status && status !== "all") query.status = status;
+    if (category && category !== "all") query.category = category;
+
+    // If assigned=true, filter by assigned to current user
+    if (req.query.assigned === "true" && req.user) {
+      query.assignedTo = req.user.id;
+    }
+
+    const total = await Issue.countDocuments(query);
+
+    const issues = await Issue.find(query)
       .populate("createdBy", "name")
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
@@ -188,7 +227,7 @@ exports.reactToIssue = async (req, res) => {
 exports.updateIssue = async (req, res) => {
   try {
     const { issueId } = req.params;
-    const { title, description, severity } = req.body;
+    const { title, description, category, severity, location } = req.body;
 
     const issue = await Issue.findById(issueId);
 
@@ -200,7 +239,7 @@ exports.updateIssue = async (req, res) => {
       });
     }
 
-    if (issue.createdBy.toString() !== req.user.id) {
+    if (!canManageIssue(issue, req.user)) {
       return res.status(403).json({
         success: false,
         message: "Not authorized to update this issue",
@@ -210,7 +249,13 @@ exports.updateIssue = async (req, res) => {
 
     if (title) issue.title = title;
     if (description) issue.description = description;
+    if (category) issue.category = category;
     if (severity) issue.severity = severity;
+    const parsedLocation = parseLocationInput(location);
+    if (parsedLocation) issue.location = parsedLocation;
+    if (req.files?.length) {
+      issue.images = req.files.map((file) => `/uploads/${file.filename}`);
+    }
 
     issue.calculatePriority();
     await issue.save();
@@ -231,6 +276,43 @@ exports.updateIssue = async (req, res) => {
 // =====================================================
 // 📌 6. GET MY ISSUES
 // =====================================================
+
+exports.deleteIssue = async (req, res) => {
+  try {
+    const { issueId } = req.params;
+
+    const issue = await Issue.findById(issueId);
+
+    if (!issue || issue.isDeleted) {
+      return res.status(404).json({
+        success: false,
+        message: "Issue not found",
+        code: "ISSUE_NOT_FOUND"
+      });
+    }
+
+    if (!canManageIssue(issue, req.user)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete this issue",
+        code: "UNAUTHORIZED"
+      });
+    }
+
+    issue.isDeleted = true;
+    await issue.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Issue deleted successfully"
+    });
+
+  } catch (error) {
+    handleError(res, error, "DELETE_ISSUE_ERROR", "Delete failed");
+  }
+};
+
+
 
 exports.getMyIssues = async (req, res) => {
   try {

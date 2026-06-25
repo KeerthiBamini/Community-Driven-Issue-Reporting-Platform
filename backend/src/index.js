@@ -12,6 +12,15 @@ const issueRoutes = require("./routes/issueRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const maintenanceRoutes = require("./routes/maintenanceRoutes");
 
+if (!process.env.JWT_SECRET) {
+  console.error("❌ Error: JWT_SECRET is not defined in your .env file.");
+  process.exit(1);
+}
+
+if (process.env.JWT_SECRET.length < 32) {
+  console.warn("⚠️ Warning: JWT_SECRET should be at least 32 characters for stronger security.");
+}
+
 // 3. Connect to Database
 connectDB();
 
@@ -20,6 +29,9 @@ const app = express();
 // --- Middlewares ---
 app.use(express.json());
 app.use(cors());
+
+// Serve static files from uploads
+app.use("/uploads", express.static("uploads"));
 
 // --- Routes ---
 app.use("/api/auth", authRoutes);
@@ -34,6 +46,7 @@ app.get("/", (req, res) => {
 
 // 404 handler
 app.use((req, res) => {
+  console.log("❌ 404 for:", req.method, req.path);
   res.status(404).json({ success: false, message: "Route Not Found" });
 });
 

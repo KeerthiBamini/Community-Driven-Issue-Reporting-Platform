@@ -4,7 +4,7 @@ import axios from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
 import "./Login.css";
 
-const Login = () => {
+const AdminLogin = () => {
   const navigate = useNavigate();
   const { login } = useContext(AuthContext);
 
@@ -36,27 +36,16 @@ const Login = () => {
     try {
       setLoading(true);
 
-      const res = await axios.post("/auth/login", formData);
+      const res = await axios.post("/auth/login", { ...formData, role: "admin" });
 
-      // Expected backend response:
-      // {
-      //   success: true,
-      //   data: { token, user }
-      // }
-
-      const { token, user } = res.data.data;
+      const { token } = res.data;
+      const user = res.data.data;
 
       // Save token + user in context
       login(user, token);
 
-      // Role-based redirect
-      if (user.role === "admin") {
-        navigate("/admin/dashboard");
-      } else if (user.role === "staff") {
-        navigate("/maintenance/dashboard");
-      } else {
-        navigate("/member/dashboard");
-      }
+      // Redirect to admin dashboard
+      navigate("/admin/dashboard");
 
     } catch (err) {
       setError(
@@ -70,7 +59,7 @@ const Login = () => {
   return (
     <div className="login-container">
       <div className="login-card">
-        <h2>Login to Your Account</h2>
+        <h2>Login as Admin</h2>
 
         {error && <div className="error-message">{error}</div>}
 
@@ -104,11 +93,14 @@ const Login = () => {
 
         <p className="register-link">
           Don’t have an account?{" "}
-          <Link to="/register">Register here</Link>
+          <Link to="/admin/register">Register here</Link>
+        </p>
+        <p className="home-link">
+          <Link to="/">Back to Home</Link>
         </p>
       </div>
     </div>
   );
 };
 
-export default Login;
+export default AdminLogin;

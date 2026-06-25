@@ -6,7 +6,7 @@ import axios from "axios";
 */
 
 const instance = axios.create({
-  baseURL: "http://localhost:5000/api/v1",
+  baseURL: "http://localhost:5000/api",
   headers: {
     "Content-Type": "application/json",
   },
@@ -44,7 +44,7 @@ instance.interceptors.response.use(
       localStorage.removeItem("user");
 
       // Redirect to login page
-      window.location.href = "/login";
+      window.location.href = "/user/login";
     }
 
     return Promise.reject(error);

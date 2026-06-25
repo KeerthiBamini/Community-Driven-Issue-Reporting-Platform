@@ -15,14 +15,15 @@ const IssueCard = ({ issue, refreshIssues }) => {
     status,
     priorityScore,
     createdAt,
-    voteCount,
+    upvotesCount,
+    downvotesCount,
+    images,
   } = issue;
 
   // Handle Voting
   const handleVote = async (voteType) => {
     try {
-      await axios.post("/votes", {
-        issueId: _id,
+      await axios.post(`/issues/${_id}/react`, {
         voteType,
       });
 
@@ -35,14 +36,14 @@ const IssueCard = ({ issue, refreshIssues }) => {
   // Status Color Mapping
   const getStatusClass = (status) => {
     switch (status) {
-      case "reported":
-        return "status-reported";
-      case "assigned":
-        return "status-assigned";
+      case "open":
+        return "status-open";
       case "in_progress":
-        return "status-progress";
+        return "status-in_progress";
       case "resolved":
         return "status-resolved";
+      case "closed":
+        return "status-closed";
       default:
         return "";
     }
@@ -66,6 +67,15 @@ const IssueCard = ({ issue, refreshIssues }) => {
             : description}
         </p>
 
+        {images && images.length > 0 && (
+          <div className="issue-images">
+            {images.slice(0, 3).map((image, index) => (
+              <img key={index} src={`http://localhost:5000${image}`} alt={`Issue ${index + 1}`} />
+            ))}
+            {images.length > 3 && <span>+{images.length - 3} more</span>}
+          </div>
+        )}
+
         <div className="issue-meta">
           <span className="category-tag">{category}</span>
           <span className="priority-score">
@@ -81,7 +91,7 @@ const IssueCard = ({ issue, refreshIssues }) => {
       {/* Footer */}
       <div className="issue-card-footer">
         {/* Voting Section - Only Members */}
-        {user?.role === "member" && (
+        {user?.role === "user" && (
           <div className="vote-section">
             <button
               className="vote-btn upvote"
@@ -90,7 +100,7 @@ const IssueCard = ({ issue, refreshIssues }) => {
               👍
             </button>
 
-            <span className="vote-count">{voteCount || 0}</span>
+            <span className="vote-count">{(upvotesCount || 0) - (downvotesCount || 0)}</span>
 
             <button
               className="vote-btn downvote"

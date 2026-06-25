@@ -6,16 +6,14 @@ const voteSchema = new mongoose.Schema(
     issue: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Issue",
-      required: [true, "Issue reference is required"],
-      index: true
+      required: [true, "Issue reference is required"]
     },
 
     // 👤 Reference to the User who reacted
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-      required: [true, "User reference is required"],
-      index: true
+      required: [true, "User reference is required"]
     },
 
     // 👍👎 Type of reaction
@@ -51,18 +49,6 @@ voteSchema.index(
   { issue: 1, user: 1 },
   { unique: true }
 );
-
-
-
-// =====================================================
-// ⚡ ADDITIONAL PERFORMANCE INDEXES
-// =====================================================
-
-// Fast lookup of votes by issue
-voteSchema.index({ issue: 1 });
-
-// Fast lookup of votes by user
-voteSchema.index({ user: 1 });
 
 
 

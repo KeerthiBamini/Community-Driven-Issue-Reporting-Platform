@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const calculatePriority = require("../utils/priorityCalculator");
 
 const issueSchema = new mongoose.Schema(
   {
@@ -62,7 +63,13 @@ const issueSchema = new mongoose.Schema(
 
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User"
+      refPath: "assignedToModel"
+    },
+
+    assignedToModel: {
+      type: String,
+      enum: ["User", "MaintenanceStaff", "Admin"],
+      default: "User"
     },
 
     status: {
@@ -71,7 +78,34 @@ const issueSchema = new mongoose.Schema(
       default: "open"
     },
 
+    resolvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      refPath: "resolvedByModel",
+      default: null
+    },
+
+    resolvedByModel: {
+      type: String,
+      enum: ["User", "MaintenanceStaff", "Admin"],
+      default: null
+    },
+
+    resolvedAt: {
+      type: Date,
+      default: null
+    },
+
     votesCount: {
+      type: Number,
+      default: 0
+    },
+
+    upvotesCount: {
+      type: Number,
+      default: 0
+    },
+
+    downvotesCount: {
       type: Number,
       default: 0
     },
@@ -108,15 +142,35 @@ const issueSchema = new mongoose.Schema(
 // priorityScore = votesCount * severityWeight
 
 issueSchema.methods.calculatePriority = function () {
-  const severityWeight = {
+  const severityToLevel = {
     low: 1,
     medium: 2,
-    high: 3,
+    high: 4,
     critical: 5
   };
 
-  this.priorityScore = this.votesCount * severityWeight[this.severity];
+  const urgencyToLevel = {
+    open: 3,
+    in_progress: 4,
+    resolved: 1,
+    closed: 1
+  };
+
+  const { score } = calculatePriority({
+    criticalLevel: severityToLevel[this.severity] || 1,
+    upvotes: this.upvotesCount || 0,
+    urgencyLevel: urgencyToLevel[this.status] || 1,
+    createdAt: this.createdAt,
+    status: this.status
+  });
+
+  this.priorityScore = score;
 };
+
+issueSchema.pre("save", function (next) {
+  this.calculatePriority();
+  next();
+});
 
 
 
